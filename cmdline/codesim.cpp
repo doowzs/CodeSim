@@ -1,8 +1,11 @@
 #include "cmdline/codesim.h"
+#include "app/app.h"
 #include "app/config.h"
 
 #include <iostream>
 #include <cstring>
+#include <string>
+#include <vector>
 using namespace std;
 
 int main(int argc, const char **argv) {
@@ -10,7 +13,8 @@ int main(int argc, const char **argv) {
   if (!try_parse_cmdline_args(argc, argv, &config)) {
     print_usage_and_exit();
   }
-  return 0;
+  App app(config);
+  return app.run();
 }
 
 void print_usage_and_exit [[noreturn]] () {

@@ -10,8 +10,6 @@ SRCS = $(wildcard */*.cpp)
 OBJS = $(patsubst %.cpp,build/%.o,$(SRCS))
 -include $(OBJS:.o=.d)
 
-all: codesim
-
 build/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "[CC] $<"
@@ -21,7 +19,11 @@ codesim: $(OBJS)
 	@echo "[LD] codesim"
 	@$(CXX) $(LDFLAGS) -o $@ $^
 
-.PHONY: clean
+.PHONY: all clean
+.DEFAULT_GOAL=all
+
+all: codesim
+
 clean:
 	@echo $(OS)
 	@$(RM) -r build codesim
