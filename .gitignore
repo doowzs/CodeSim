@@ -5,6 +5,7 @@
 !*/
 !*/*.h
 !*/*.cpp
+!tests/*/*.cpp
 !.gitignore
 !README.md
 !Makefile
