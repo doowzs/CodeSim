@@ -13,7 +13,7 @@ int main(int argc, const char **argv) {
   if (!try_parse_cmdline_args(argc, argv, &config)) {
     print_usage_and_exit();
   }
-  App app(config);
+  App app(&config);
   return app.run();
 }
 
@@ -24,7 +24,7 @@ void print_usage_and_exit [[noreturn]] () {
 
 bool try_parse_cmdline_args(int argc, const char **argv, Config *config) {
 #define PUSH_FILE(f) config->files.emplace_back(string(f))
-  int i = 0;
+  int i = 1;
   for (; i < argc; ++i) {
     if (!strcmp(argv[i], "-h")) {
       return false;

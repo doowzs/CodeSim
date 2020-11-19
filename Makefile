@@ -25,5 +25,4 @@ codesim: $(OBJS)
 all: codesim
 
 clean:
-	@echo $(OS)
 	@$(RM) -r build codesim

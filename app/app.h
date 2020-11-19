@@ -1,19 +1,23 @@
 #ifndef APP_APP_H
 #define APP_APP_H
 
-#include "app/config.h"
-
 #include <string>
 #include <vector>
+
+struct Config;
+class Program;
 
 class App {
   private:
     const bool verbose;
     const std::vector<const std::string> files;
 
+  private:
+    std::vector<Program *> programs;
+
   public:
     App() = delete;
-    explicit App(Config config);
+    explicit App(Config *config);
     ~App();
 
   public:
