@@ -1,6 +1,6 @@
 CXX = clang++
 CXXFLAGS = -ggdb3 -Wall -MMD -std=c++17 -I$(shell pwd)
-LDFLAGS = -lm -lclang
+LDFLAGS = -lm -lclang -lclang-cpp -lLLVM
 ifeq ($(shell uname), Darwin)
 	CXXFLAGS += -I/usr/local/opt/llvm/include
 	LDFLAGS += -L/usr/local/opt/llvm/lib
