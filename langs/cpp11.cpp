@@ -12,7 +12,7 @@ using namespace clang;
 #include <string>
 #include <memory>
 #include <vector>
-#include <fstream>
+#include <sstream>
 #include <iostream>
 using namespace std;
 
@@ -61,15 +61,26 @@ size_t Cpp11::load_contents() {
   sm.setMainFileID(fi);
   pp.EnterMainSourceFile();
   dc.BeginSourceFile(ci->getLangOpts()); // no initializing leads to SF
-  cerr << "Preprocessor prepared." << endl;
 
   Token t;
+  stringstream buf;
   do {
     pp.Lex(t);
     if (de.hasErrorOccurred()) break;
-    pp.DumpToken(t);
-    cerr << endl;
+    const auto loc = sm.getFileLoc(t.getLocation()); // for macros
+    if (sm.getFileID(loc) == fi) {
+      const auto k = t.getKind();
+      if (tok::isAnyIdentifier(k)) {
+        buf << "I";
+      } else if (tok::isStringLiteral(k)) {
+        buf << "S";
+      } else {
+        buf << pp.getSpelling(t);
+      }
+    }
   } while (t.isNot(tok::eof));
+
+  cerr << buf.str() << endl;
   return 0;
 }
 
