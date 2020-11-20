@@ -3,13 +3,20 @@
 
 #include "langs/generic.h"
 
-#include <llvm/Support/raw_os_ostream.h>
-
 #include <string>
+#include <memory>
+
+namespace clang {
+class CompilerInstance;
+class TargetOptions;
+class TargetInfo;
+}
 
 class Cpp11 : public Program {
   public:
-    llvm::raw_os_ostream stream;
+    std::shared_ptr<clang::CompilerInstance> ci;
+    std::shared_ptr<clang::TargetOptions> options;
+    std::shared_ptr<clang::TargetInfo> target;
 
   public:
     Cpp11() = delete;

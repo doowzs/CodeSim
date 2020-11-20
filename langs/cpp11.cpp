@@ -1,53 +1,75 @@
 #include "langs/cpp11.h"
 
-#include <clang/Frontend/ASTUnit.h>
-#include <clang/Tooling/Tooling.h>
-#include <llvm/Support/raw_os_ostream.h>
+#include <clang/Basic/LangOptions.h>
+#include <clang/Basic/TargetInfo.h>
+#include <clang/Basic/FileManager.h>
+#include <clang/Basic/SourceManager.h>
+#include <clang/Lex/Preprocessor.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <llvm/Support/Host.h>
 using namespace clang;
-using namespace clang::tooling;
-using namespace llvm;
 
 #include <string>
+#include <memory>
 #include <vector>
 #include <fstream>
 #include <iostream>
 using namespace std;
 
-Cpp11::Cpp11(const string file) :
-  Program(move(file)),
-  stream(raw_os_ostream(cerr)) {}
+// Use CompilerInstance to create preprocessors and handle source code.
+// See https://github.com/loarabia/Clang-tutorial/wiki/TutorialOrig.
+Cpp11::Cpp11(const string file) : Program(move(file)) {
+  ci = make_shared<CompilerInstance>();
+  ci->createDiagnostics();
+  options = make_shared<TargetOptions>();
+  options->Triple = llvm::sys::getDefaultTargetTriple();
+  target = shared_ptr<TargetInfo>(TargetInfo::CreateTargetInfo(ci->getDiagnostics(), options));
+  ci->setTarget(target.get());
+  ci->createFileManager();
+  ci->createSourceManager(ci->getFileManager());
+  ci->createPreprocessor(TU_Complete);
+
+  HeaderSearchOptions hso;
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#ifdef LLVM_PREFIX
+  hso.AddPath(TOSTRING(LLVM_PREFIX) "/include/c++/v1", frontend::Angled, false, false);
+  hso.AddPath(TOSTRING(LLVM_PREFIX) "/lib/clang/11.0.0/include", frontend::Angled, false, false);
+#endif
+#ifdef MACOS
+  hso.AddPath("/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/usr/include", frontend::Angled, false, false);
+#endif
+#undef TOSTRING
+#undef STRINGIFY
+  auto &pp = ci->getPreprocessor();
+  ApplyHeaderSearchOptions(pp.getHeaderSearchInfo(), hso, pp.getLangOpts(), pp.getTargetInfo().getTriple());
+}
 
 size_t Cpp11::load_contents() {
   cerr << "Loading " << file << "." << endl;
-  size_t length = load_raw_code();
-  cerr << "Loaded " << file << "." << endl;
 
-  auto consumer = new DiagnosticConsumer();
-  const vector<string> cx_args = {
-    "-E", "-x", "c++", "-std=c++11", "-pedantic"
-#ifdef LLVM_PREFIX
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-    , "-I" TOSTRING(LLVM_PREFIX) "/include/c++/v1/"
-    , "-I" TOSTRING(LLVM_PREFIX) "/lib/clang/11.0.0/include"
-#undef TOSTRING
-#undef STRINGIFY
-#endif
-  };
-  auto unit = buildASTFromCodeWithArgs(raw_code, cx_args, file, "clang-tool", make_shared<PCHContainerOperations>(), getClangStripDependencyFileAdjuster(),FileContentMappings(), consumer);
-  if (unit == nullptr) {
-    cerr << "Failed to build AST for " << file << "." << endl;
-    return 0;
+  auto &de = ci->getDiagnostics();
+  auto &dc = ci->getDiagnosticClient();
+  auto &fm = ci->getFileManager();
+  auto &sm = ci->getSourceManager();
+  auto &pp = ci->getPreprocessor();
+  auto fe = fm.getFile(file); // llvm::ErrorOr
+  if (auto ec = fe.getError()) {
+    throw ec;
   }
+  auto fi = sm.createFileID(fe.get(), SourceLocation(), SrcMgr::C_User);
+  sm.setMainFileID(fi);
+  pp.EnterMainSourceFile();
+  dc.BeginSourceFile(ci->getLangOpts()); // no initializing leads to SF
+  cerr << "Preprocessor prepared." << endl;
 
-  cerr << "Built AST for " << file << "." << endl;
-  unit->visitLocalTopLevelDecls((void*)this,
-    [](void *context, const Decl *D) -> bool {
-      D->print(((Cpp11 *)context)->stream);
-      return true;
-    }
-  );
-
-  return length;
+  Token t;
+  do {
+    pp.Lex(t);
+    if (de.hasErrorOccurred()) break;
+    pp.DumpToken(t);
+    cerr << endl;
+  } while (t.isNot(tok::eof));
+  return 0;
 }
 
