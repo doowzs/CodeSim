@@ -3,9 +3,14 @@
 
 #include "langs/generic.h"
 
+#include <llvm/Support/raw_os_ostream.h>
+
 #include <string>
 
 class Cpp11 : public Program {
+  public:
+    llvm::raw_os_ostream stream;
+
   public:
     Cpp11() = delete;
     Cpp11(const std::string file);
