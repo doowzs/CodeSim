@@ -5,10 +5,6 @@
 #include <vector>
 #include <unordered_map>
 
-#define WINDOW 2
-#define BASE 127U
-#define MODULO 998244353U
-
 class Winnowing {
   private:
     std::vector<std::pair<size_t, uint32_t>> hashes;
