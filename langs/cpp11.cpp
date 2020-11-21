@@ -5,6 +5,7 @@
 #include <clang/Basic/FileManager.h>
 #include <clang/Basic/SourceManager.h>
 #include <clang/Lex/Preprocessor.h>
+#include <clang/Lex/PreprocessorOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <llvm/Support/Host.h>
 using namespace clang;
@@ -16,11 +17,35 @@ using namespace clang;
 #include <iostream>
 using namespace std;
 
+static const char *cx_args[] = {
+  "-E", "-x", "c++", "-std=c++11", "-pedantic",
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#ifdef MACOS
+  "-I/Library/Developer/CommandLineTools/usr/include/c++/v1",
+  "-I/Library/Developer/CommandLineTools/usr/lib/clang/11.0.0/include",
+  "-I/Library/Developer/CommandLineTools/usr/lib/clang/12.0.0/include",
+  "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+#elif defined LLVM_PREFIX
+  "-I" TOSTRING(LLVM_PREFIX) "/include/c++/v1",
+  "-I" TOSTRING(LLVM_PREFIX) "/lib/clang/11.0.0/include",
+  "-I" TOSTRING(LLVM_PREFIX) "/lib/clang/12.0.0/include",
+#endif
+#undef TOSTRING
+#undef STRINGIFY
+};
+#define nr_cx_args sizeof(cx_args) / sizeof(const char *)
+
 // Use CompilerInstance to create preprocessors and handle source code.
 // See https://github.com/loarabia/Clang-tutorial/wiki/TutorialOrig.
+// See https://stackoverflow.com/questions/38356485/how-do-i-put-clang-into-c-mode/38445919.
+// Example https://github.com/loarabia/Clang-tutorial/blob/master/CIrewriter.cpp.
 Cpp11::Cpp11(const string file) : Program(move(file)) {
   ci = make_shared<CompilerInstance>();
   ci->createDiagnostics();
+  CompilerInvocation::CreateFromArgs(ci->getInvocation(),
+                                     ArrayRef<const char *>(cx_args, nr_cx_args),
+                                     ci->getDiagnostics());
   options = make_shared<TargetOptions>();
   options->Triple = llvm::sys::getDefaultTargetTriple();
   target = shared_ptr<TargetInfo>(TargetInfo::CreateTargetInfo(ci->getDiagnostics(), options));
@@ -28,21 +53,6 @@ Cpp11::Cpp11(const string file) : Program(move(file)) {
   ci->createFileManager();
   ci->createSourceManager(ci->getFileManager());
   ci->createPreprocessor(TU_Complete);
-
-  HeaderSearchOptions hso;
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#ifdef LLVM_PREFIX
-  hso.AddPath(TOSTRING(LLVM_PREFIX) "/include/c++/v1", frontend::Angled, false, false);
-  hso.AddPath(TOSTRING(LLVM_PREFIX) "/lib/clang/11.0.0/include", frontend::Angled, false, false);
-#endif
-#ifdef MACOS
-  hso.AddPath("/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/usr/include", frontend::Angled, false, false);
-#endif
-#undef TOSTRING
-#undef STRINGIFY
-  auto &pp = ci->getPreprocessor();
-  ApplyHeaderSearchOptions(pp.getHeaderSearchInfo(), hso, pp.getLangOpts(), pp.getTargetInfo().getTriple());
 }
 
 size_t Cpp11::load_contents() {
@@ -60,21 +70,20 @@ size_t Cpp11::load_contents() {
   auto fi = sm.createFileID(fe.get(), SourceLocation(), SrcMgr::C_User);
   sm.setMainFileID(fi);
   pp.EnterMainSourceFile();
-  dc.BeginSourceFile(ci->getLangOpts()); // no initializing leads to SF
+  dc.BeginSourceFile(ci->getLangOpts(), &pp); // no initializing leads to SF
 
   Token t;
   stringstream buf;
   do {
     pp.Lex(t);
-    if (de.hasErrorOccurred()) break;
     const auto loc = sm.getFileLoc(t.getLocation()); // for macros
     if (sm.getFileID(loc) == fi) {
       const auto k = t.getKind();
       if (tok::isAnyIdentifier(k)) {
-        buf << "I";
+        buf << (pp.LookAhead(0).getKind() == tok::l_paren ? "A" : "V");
       } else if (tok::isStringLiteral(k)) {
         buf << "S";
-      } else {
+      } else if (k) {
         buf << pp.getSpelling(t);
       }
     }
