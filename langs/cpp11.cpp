@@ -57,7 +57,7 @@ Cpp11::Cpp11(const string file) : Program(move(file)) {
 }
 
 size_t Cpp11::load_contents() {
-  cerr << "Loading " << file << "." << endl;
+  cerr << "Loading C++11 source " << file << "." << endl;
 
   auto &dc = ci->getDiagnosticClient();
   auto &fm = ci->getFileManager();

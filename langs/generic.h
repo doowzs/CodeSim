@@ -3,6 +3,8 @@
 
 #include <string>
 
+class Winnowing;
+
 class Program {
   protected:
     const std::string file;
@@ -10,17 +12,22 @@ class Program {
   protected:
     std::string raw_code;
     std::string contents;
+  
+  private:
+    Winnowing *fingerprints;
 
   protected:
-    virtual size_t load_raw_code();
+    size_t load_raw_code();
 
   public:
     Program() = delete;
     Program(const std::string file);
-    virtual ~Program() = default;
+    virtual ~Program();
 
   public:
     virtual size_t load_contents() = 0;
+    void calculate_fingerprints();
+    const Winnowing *get_fingerprints() const;
 };
 
 #endif//LANGS_GENERIC_H
