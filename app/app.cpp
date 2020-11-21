@@ -28,7 +28,8 @@ int App::run() {
     programs.emplace_back(new Cpp11(file));
   } 
   for (auto &program: programs) {
-    program->load_contents();
+    auto length = program->load_contents();
+    cerr << "File length " << length << "." << endl;
   }
   cerr.clear();
   return 0;

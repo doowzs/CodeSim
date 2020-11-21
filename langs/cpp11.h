@@ -8,6 +8,7 @@
 
 namespace clang {
 class CompilerInstance;
+class DiagnosticConsumer;
 class TargetOptions;
 class TargetInfo;
 }
@@ -15,6 +16,7 @@ class TargetInfo;
 class Cpp11 : public Program {
   public:
     std::shared_ptr<clang::CompilerInstance> ci;
+    std::shared_ptr<clang::DiagnosticConsumer> client;
     std::shared_ptr<clang::TargetOptions> options;
     std::shared_ptr<clang::TargetInfo> target;
 

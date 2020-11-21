@@ -42,7 +42,8 @@ static const char *cx_args[] = {
 // Example https://github.com/loarabia/Clang-tutorial/blob/master/CIrewriter.cpp.
 Cpp11::Cpp11(const string file) : Program(move(file)) {
   ci = make_shared<CompilerInstance>();
-  ci->createDiagnostics();
+  client = make_shared<DiagnosticConsumer>();
+  ci->createDiagnostics(client.get(), false);
   CompilerInvocation::CreateFromArgs(ci->getInvocation(),
                                      ArrayRef<const char *>(cx_args, nr_cx_args),
                                      ci->getDiagnostics());
@@ -58,7 +59,6 @@ Cpp11::Cpp11(const string file) : Program(move(file)) {
 size_t Cpp11::load_contents() {
   cerr << "Loading " << file << "." << endl;
 
-  auto &de = ci->getDiagnostics();
   auto &dc = ci->getDiagnosticClient();
   auto &fm = ci->getFileManager();
   auto &sm = ci->getSourceManager();
@@ -88,8 +88,7 @@ size_t Cpp11::load_contents() {
       }
     }
   } while (t.isNot(tok::eof));
-
-  cerr << buf.str() << endl;
-  return 0;
+  contents = buf.str();
+  return contents.length();
 }
 
