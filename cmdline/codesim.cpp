@@ -18,7 +18,9 @@ int main(int argc, const char **argv) {
 }
 
 void print_usage_and_exit [[noreturn]] () {
-  cerr << "Usage: codesim [-vh] -- files" << endl;
+  cerr << "Usage: codesim [-vh] -- files" << endl
+       << "  - codesim a.cpp b.cpp: compare two files" << endl
+       << "  - codesim files/*.cpp: compare multiple files" << endl;
   exit(1);
 }
 
