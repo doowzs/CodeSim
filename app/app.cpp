@@ -44,12 +44,19 @@ int App::run() {
   } else {
     size_t size = programs.size();
     for (int i = 0; i < size; ++i) {
+      vector<pair<double, string>> scores;
+      const auto A = programs[i]->get_fingerprints();
       for (int j = 0; j < size; ++j) {
-        const auto A = programs[i]->get_fingerprints();
+        if (i == j) continue;
         const auto B = programs[j]->get_fingerprints();
-        double score = Winnowing::match(A, B);
-        cout << files[i] << " " << files[j] << ": "
-             << fixed << setprecision(3) << score << endl;
+        const double score = Winnowing::match(A, B);
+        scores.emplace_back(make_pair(score, files[j]));
+      }
+      sort(scores.begin(), scores.end(), greater<>());
+      cout << "Matches for " << files[i] << ":" << endl;
+      for (auto &s : scores) {
+        cout << " -> " << fixed << setprecision(3)
+             << s.first << " " << s.second << endl;
       }
     }
   }
