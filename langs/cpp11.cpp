@@ -41,16 +41,15 @@ static const char *cx_args[] = {
 // See https://stackoverflow.com/questions/38356485/how-do-i-put-clang-into-c-mode/38445919.
 // Example https://github.com/loarabia/Clang-tutorial/blob/master/CIrewriter.cpp.
 Cpp11::Cpp11(const string file) : Program(move(file)) {
-  ci = make_shared<CompilerInstance>();
-  client = make_shared<DiagnosticConsumer>();
-  ci->createDiagnostics(client.get(), false);
+  ci = make_unique<CompilerInstance>();
+  ci->createDiagnostics(new DiagnosticConsumer(), true);
   CompilerInvocation::CreateFromArgs(ci->getInvocation(),
                                      ArrayRef<const char *>(cx_args, nr_cx_args),
                                      ci->getDiagnostics());
-  options = make_shared<TargetOptions>();
+  auto options = make_shared<TargetOptions>();
   options->Triple = llvm::sys::getDefaultTargetTriple();
-  target = shared_ptr<TargetInfo>(TargetInfo::CreateTargetInfo(ci->getDiagnostics(), options));
-  ci->setTarget(target.get());
+  auto target = TargetInfo::CreateTargetInfo(ci->getDiagnostics(), options);
+  ci->setTarget(target);
   ci->createFileManager();
   ci->createSourceManager(ci->getFileManager());
   ci->createPreprocessor(TU_Complete);
