@@ -10,7 +10,7 @@ class Program;
 class App {
   private:
     const bool verbose;
-    const std::vector<const std::string> files;
+    const std::vector<std::string> files;
 
   private:
     std::vector<Program *> programs;

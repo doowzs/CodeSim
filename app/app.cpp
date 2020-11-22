@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 App::App(Config *config) : verbose(config->verbose), files(config->files) {
@@ -32,8 +33,10 @@ int App::run() {
       program->load_contents();
       program->calculate_fingerprints();
       programs.emplace_back(program);
-    } catch (errno_t ec) {
-      return ec;
+    } catch (error_code ec) {
+      cerr.clear();
+      cerr << ec.message() << endl;
+      return ec.value();
     }
   }
   if (programs.size() == 2) {

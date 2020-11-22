@@ -6,7 +6,7 @@
 
 struct Config {
   bool verbose;
-  std::vector<const std::string> files;
+  std::vector<std::string> files;
   Config();
 };
 

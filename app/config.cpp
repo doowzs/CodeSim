@@ -4,7 +4,4 @@
 #include <vector>
 using namespace std;
 
-Config::Config() {
-  verbose = false;
-  files = vector<const string>();
-}
+Config::Config() : verbose(false) {}
