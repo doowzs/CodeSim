@@ -5,7 +5,7 @@
 #include <climits>
 using namespace std;
 
-#define WINDOW 5
+#define WINDOW 8
 #define BASE 127U
 #define MODULO 998244353U
 #define NEXT(x) (x + 1) % WINDOW
