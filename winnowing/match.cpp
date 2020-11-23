@@ -25,7 +25,7 @@ double Winnowing::match(const Winnowing *A, const Winnowing *B) {
         }
       }
       if (not continuous) strike = 0;
-      score += 1 << min(strike++, 2U);
+      score += matches.empty() ? 0 : (1 << min(strike++, 2U));
       last_pos = matches.empty() ? 0 : pos;
       last_matches.clear();
       copy(matches.begin(), matches.end(), back_inserter(last_matches));
