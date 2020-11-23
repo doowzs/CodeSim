@@ -9,9 +9,10 @@ ifeq ($(shell uname), Darwin)
 	LDFLAGS += -L/usr/local/opt/llvm/lib
 else ifeq ($(shell uname), Linux)
 	CXX = clang++-11
-	CXXFLAGS += -I$(shell llvm-config-11 --prefix)/include
+	CXXFLAGS += -DLLVM_PREFIX=$(shell llvm-config-11 --prefix)
+	CXXFLAGS += -I$(shell llvm-config-11 --includedir)
 	LDFLAGS += -lclang-11 -lclang-cpp11 -lLLVM-11
-	LDFLAGS += -L$(shell llvm-config-11 --prefix)/lib
+	LDFLAGS += -L$(shell llvm-config-11 --libdir)
 endif
 
 SRCS = $(wildcard */*.cpp)
